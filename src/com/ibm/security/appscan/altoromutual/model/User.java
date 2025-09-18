@@ -77,7 +77,7 @@ public class User implements java.io.Serializable{
 		try {
 			return DBUtil.getAccounts(username);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LOGGER.error("SQL exception occurred", e);
 			return null;
 		}
 	}
