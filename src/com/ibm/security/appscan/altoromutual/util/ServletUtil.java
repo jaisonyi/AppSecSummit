@@ -92,8 +92,9 @@ public class ServletUtil {
 		File file = new File(path);
 		Document document;
 		try {
+			String canonicalPath = file.getCanonicalPath();
 			document = DocumentBuilderFactory.newInstance()
-					.newDocumentBuilder().parse(file);
+					.newDocumentBuilder().parse(new File(canonicalPath));
 			// root node
 			NodeList nodes = document.getElementsByTagName("news");
 
@@ -394,7 +395,20 @@ public class ServletUtil {
 			//update base path and write it back out to the properties file
 			swaggerProps.remove(basePath);
 			swaggerProps.put(basePath, newBasePath);
-			BufferedWriter swaggerWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(servletContext.getRealPath("swagger/properties.json"))));
+			// Obtain the canonical path of the file and its base directory
+			String filePath = servletContext.getRealPath("swagger/properties.json");
+			File swaggerFile = new File(filePath);
+			String canonicalFilePath = swaggerFile.getCanonicalPath();
+			String expectedDir = servletContext.getRealPath("swagger");
+			String canonicalExpectedDir = new File(expectedDir).getCanonicalPath();
+
+			// Validate if the file's canonical path starts with the expected directory's canonical path
+			if (!canonicalFilePath.startsWith(canonicalExpectedDir)) {
+			    throw new SecurityException("Invalid file path detected.");
+			}
+
+			// Continue with the original operation
+			BufferedWriter swaggerWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(swaggerFile)));
 			swaggerWriter.write(swaggerProps.toString());
 			swaggerWriter.close();
 		} catch (Exception e) {
@@ -402,7 +416,6 @@ public class ServletUtil {
 												+ "Please set \"basePath\" property in /WebContent/swagger/properties.json file manually to match your context path with /api suffix\n"
 												+ "For example: /AltoroJ/api if AltoroJ index page is at http://appscanvm/AltoroJ/index.html /n"
 												+ "Error message: " + e.getMessage());
-//			e.printStackTrace();
 		}
 		
 		//parse swagger properties
