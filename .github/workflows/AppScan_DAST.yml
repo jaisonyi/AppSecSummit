@@ -15,7 +15,7 @@ jobs:
           asoc_secret: ${{secrets.ASOC_SECRET}}
           application_id: ${{vars.ASOC_APPID}}
           dynamic_scan_type: dast
-          starting_URL: 'https://demo.testfire.net?mode=demo'
+          starting_URL: 'https://demo.testfire.net'
           login_method: userpass
           login_user: jsmith
           login_password: demo1234
