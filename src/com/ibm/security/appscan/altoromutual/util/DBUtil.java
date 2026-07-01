@@ -532,7 +532,7 @@ public class DBUtil {
 		} catch (SQLException e){
 			Log4AltoroJ.getInstance().logError(e.getMessage());
 			return -1;
-			// comment 
+			// comment for testing only purpose 
 		}
 	}
 }
