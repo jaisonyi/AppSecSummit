@@ -407,6 +407,7 @@ public class ServletUtil {
 		
 		//parse swagger properties
 		swaggerInitialized = true;
+		// Test purpose change 
 	}
 	
 	
