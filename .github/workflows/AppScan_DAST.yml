@@ -17,8 +17,9 @@ jobs:
           dynamic_scan_type: dast
           starting_URL: 'https://demo.testfire.net'
           login_method: userpass
-          login_user: jsmith
-          login_password: demo1234
+          # TODO(developer): Populate the repository secrets used by the AppScan DAST scan.
+          login_user: ${{ secrets.APPSCAN_LOGIN_USER }}
+          login_password: ${{ secrets.APPSCAN_LOGIN_PASSWORD }}
           network: public
           fail_for_noncompliance: false
           wait_for_analysis: true
