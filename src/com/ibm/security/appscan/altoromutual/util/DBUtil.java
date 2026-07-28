@@ -19,6 +19,8 @@ IBM AltoroJ
 package com.ibm.security.appscan.altoromutual.util;
 
 import java.sql.Connection;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,6 +39,8 @@ import com.ibm.security.appscan.altoromutual.model.Feedback;
 import com.ibm.security.appscan.altoromutual.model.Transaction;
 import com.ibm.security.appscan.altoromutual.model.User;
 import com.ibm.security.appscan.altoromutual.model.User.Role;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Utility class for database operations
@@ -44,6 +48,7 @@ import com.ibm.security.appscan.altoromutual.model.User.Role;
  *
  */
 public class DBUtil {
+	private static final Logger logger = Logger.getLogger(DBUtil.class.getName());
 
 	private static final String PROTOCOL = "jdbc:derby:";
 	private static final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
@@ -441,7 +446,7 @@ public class DBUtil {
 			
 			return users.toArray(new String[users.size()]);
 		} catch (SQLException e){
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "An SQL exception occurred in getBankUsernames()", e);
 			return new String[0];
 		}
 	}
