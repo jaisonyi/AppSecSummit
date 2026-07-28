@@ -54,6 +54,7 @@ import com.ibm.security.appscan.altoromutual.model.User;
  * This is a utility class used by servlet classes and JSP pages
  * 
  * @author Alexei
+ * Test for action workflow
  */
 public class ServletUtil {
 
