@@ -456,7 +456,7 @@ public class DBUtil {
 		while (resultSet.next()){
 			String name = resultSet.getString("ACCOUNT_NAME");
 			double balance = resultSet.getDouble("BALANCE"); 
-			Account newAccount = new Account(accountNo, name, balance);
+			Account newAccount = new Account(accountNo, name, balance);    
 			accounts.add(newAccount);
 		}
 		
