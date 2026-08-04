@@ -192,7 +192,7 @@ public class DBUtil {
 				String subject = resultSet.getString("SUBJECT");
 				String message = resultSet.getString("COMMENTS");
 				long id = resultSet.getLong("FEEDBACK_ID");
-				Feedback feedback = new Feedback(id, name, email, subject, message);
+				Feedback feedback = new Feedback(id, name, email, subject, message);    
 				feedbackList.add(feedback);
 			}
 		} catch (SQLException e) {
