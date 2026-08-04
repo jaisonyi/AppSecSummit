@@ -69,8 +69,8 @@ public class DBUtil {
 **
 		*/
 		
-		String dataSourceName = ServletUtil.getAppProperty("database.alternateDataSource");
-		
+		String dataSourceName = ServletUtil.getAppProperty("database.alternateDataSource");   
+		//
 		/* Connect to an external database (e.g. DB2) */
 		if (dataSourceName != null && dataSourceName.trim().length() > 0){
 			try {
