@@ -1,0 +1,140 @@
+name: SAST-SARIF
+on:
+  push:
+    branches:
+      - Altoro-3.4
+  pull_request:
+    branches:
+      - Altoro-3.4
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  appscan-sast:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      APPSCAN_SCAN_NAME: ${{ github.event.repository.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Run AppScan SAST
+        uses: HCL-TECH-SOFTWARE/appscan-sast-action@v1.1.3
+        with:
+          asoc_key: ${{ secrets.ASOC_KEY }}
+          asoc_secret: ${{ secrets.ASOC_SECRET }}
+          application_id: ${{ vars.ASOC_APPID }}
+          scan_name: ${{ env.APPSCAN_SCAN_NAME }}
+          static_analysis_only: true
+          scan_build_outputs: true
+          wait_for_analysis: true
+          analysis_timeout_minutes: 60
+          fail_for_noncompliance: false
+
+      - name: Export AppScan findings as SARIF
+        env:
+          APPSCAN_KEY: ${{ secrets.ASOC_KEY }}
+          APPSCAN_SECRET: ${{ secrets.ASOC_SECRET }}
+          APPSCAN_APP_ID: ${{ vars.ASOC_APPID }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import time
+          from urllib.error import HTTPError
+          from urllib.parse import urlencode
+          from urllib.request import Request, urlopen
+
+          base_url = "https://cloud.appscan.com"
+          client_type = "github-sast"
+          scan_name = os.environ["APPSCAN_SCAN_NAME"]
+          app_id = os.environ["APPSCAN_APP_ID"]
+
+          def api_request(path, method="GET", payload=None, token=None):
+              headers = {"Accept": "application/json", "ClientType": client_type}
+              data = None
+              if payload is not None:
+                  headers["Content-Type"] = "application/json"
+                  data = json.dumps(payload).encode("utf-8")
+              if token:
+                  headers["Authorization"] = "Bearer " + token
+              request = Request(base_url + path, data=data, headers=headers, method=method)
+              try:
+                  with urlopen(request, timeout=120) as response:
+                      body = response.read()
+              except HTTPError as error:
+                  detail = error.read().decode("utf-8", errors="replace")
+                  raise RuntimeError(f"AppScan API {method} {path} failed ({error.code}): {detail}") from error
+              return json.loads(body) if body else {}
+
+          login = api_request(
+              "/api/v4/Account/ApiKeyLogin",
+              method="POST",
+              payload={"keyId": os.environ["APPSCAN_KEY"], "keySecret": os.environ["APPSCAN_SECRET"], "clientType": client_type},
+          )
+          token = login.get("Token")
+          if not token:
+              raise RuntimeError("AppScan API login returned no bearer token")
+
+          escaped_name = scan_name.replace("'", "''")
+          filters = {
+              "$filter": f"AppId eq {app_id} and Name eq '{escaped_name}' and Technology eq 'StaticAnalyzer'",
+              "$orderby": "CreatedAt desc",
+              "$top": "10",
+          }
+          scans = api_request("/api/v4/Scans?" + urlencode(filters), token=token).get("Items", [])
+          matches = [scan for scan in scans if scan.get("AppId", "").lower() == app_id.lower() and scan.get("Name") == scan_name and scan.get("Technology") == "StaticAnalyzer"]
+          if not matches:
+              raise RuntimeError(f"Could not find AppScan SAST scan named {scan_name!r} for application {app_id}")
+          scan = max(matches, key=lambda item: item.get("CreatedAt", ""))
+          execution = scan.get("LatestExecution") or {}
+          if execution.get("Status") != "Ready":
+              raise RuntimeError(f"AppScan scan did not complete successfully (status: {execution.get('Status', 'unknown')})")
+          execution_id = execution.get("Id")
+          if not execution_id:
+              raise RuntimeError("Completed AppScan scan has no latest execution ID")
+
+          report = api_request(
+              f"/api/v4/Reports/Security/ScanExecution/{execution_id}",
+              method="POST",
+              token=token,
+              payload={"Configuration": {"ReportFileType": "Sarif"}, "ApplyPolicies": "None"},
+          )
+          report_id = report.get("Id")
+          if not report_id:
+              raise RuntimeError("AppScan did not return a SARIF report job ID")
+
+          report_path = "/api/v4/Reports?" + urlencode({"$filter": f"Id eq {report_id}", "$top": "1"})
+          for _ in range(120):
+              items = api_request(report_path, token=token).get("Items", [])
+              if items and items[0].get("Status") == "Ready":
+                  break
+              if items and items[0].get("Status") in {"Failed", "Deleted"}:
+                  raise RuntimeError(f"AppScan SARIF report generation failed (status: {items[0]['Status']})")
+              time.sleep(10)
+          else:
+              raise RuntimeError("Timed out waiting for the AppScan SARIF report")
+
+          download = Request(
+              f"{base_url}/api/v4/Reports/{report_id}/Download",
+              headers={"Authorization": "Bearer " + token, "Accept": "application/json", "ClientType": client_type},
+          )
+          with urlopen(download, timeout=120) as response:
+              sarif_bytes = response.read()
+          sarif = json.loads(sarif_bytes)
+          if sarif.get("version") != "2.1.0" or not isinstance(sarif.get("runs"), list):
+              raise RuntimeError("AppScan returned a file that is not valid SARIF 2.1.0")
+          with open("appscan-results.sarif", "wb") as result_file:
+              result_file.write(sarif_bytes)
+          print(f"Exported SARIF for AppScan execution {execution_id} ({len(sarif['runs'])} runs)")
+          PY
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: appscan-results.sarif
+          category: appscan-sast
