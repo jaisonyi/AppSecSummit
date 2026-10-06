@@ -45,6 +45,7 @@ jobs:
           import json
           import os
           import time
+          import uuid
           from urllib.error import HTTPError
           from urllib.parse import urlencode
           from urllib.request import Request, urlopen
@@ -126,6 +127,17 @@ jobs:
           with urlopen(download, timeout=120) as response:
               sarif_bytes = response.read()
           sarif = json.loads(sarif_bytes)
+          normalized_guids = 0
+          for run in sarif["runs"]:
+              for result in run.get("results", []):
+                  guid = result.get("guid")
+                  if guid:
+                      parsed_guid = uuid.UUID(guid)
+                      if parsed_guid.version not in {1, 2, 3, 4, 5} or parsed_guid.variant != uuid.RFC_4122:
+                          result["guid"] = str(uuid.uuid5(uuid.NAMESPACE_URL, "appscan-result:" + guid.lower()))
+                          normalized_guids += 1
+          if normalized_guids:
+              print("Normalized non-RFC result GUIDs:", normalized_guids)
           sarif_bytes = json.dumps(sarif, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
           if sarif.get("version") != "2.1.0" or not isinstance(sarif.get("runs"), list):
               raise RuntimeError("AppScan returned a file that is not valid SARIF 2.1.0")
