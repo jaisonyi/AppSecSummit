@@ -1,3 +1,4 @@
+<%@ page import="org.apache.commons.lang3.StringEscapeUtils" %>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 
@@ -37,7 +38,7 @@ IBM AltoroJ
 		
 		if (error != null && error.trim().length() > 0){
 			request.getSession().removeAttribute("loginError");
-			out.print(error);
+			out.print(org.apache.commons.lang3.StringEscapeUtils.escapeHtml4(error));
 		}
 		%>
 		</span></p>
