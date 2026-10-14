@@ -18,7 +18,7 @@ jobs:
           starting_URL: 'https://demo.testfire.net'
           login_method: userpass
           login_user: jsmith
-          login_password: demo1234
+          login_password: ${{ secrets.LOGIN_PASSWORD }} # TODO(developer): Add 'LOGIN_PASSWORD' to repository secrets
           network: public
           fail_for_noncompliance: false
           wait_for_analysis: true
