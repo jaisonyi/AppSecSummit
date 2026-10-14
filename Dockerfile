@@ -1,5 +1,5 @@
 FROM tomcat:7
-USER root
+USER tomcat
 
 ADD https://github.com/HCL-TECH-SOFTWARE/AltoroJ/releases/download/v3.4/altoromutual.war /usr/local/tomcat/webapps
 EXPOSE 8080
