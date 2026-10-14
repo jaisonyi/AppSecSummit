@@ -285,7 +285,7 @@ public class ServletUtil {
 				} else if (!isComment && line.trim().length() > 0) {
 					String error = "Failed to process property line: " + line + "\n Correct format is propertyName=propertyValue";
 					Log4AltoroJ.getInstance().logError(error);
-					System.out.println(error);
+					
 				}
 			
 			}
