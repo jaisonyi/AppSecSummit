@@ -30,6 +30,9 @@ import com.ibm.security.appscan.Log4AltoroJ;
 import com.ibm.security.appscan.altoromutual.util.DBUtil;
 import com.ibm.security.appscan.altoromutual.util.ServletUtil;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 /**
  * This servlet processes user's login and logout operations
  * Servlet implementation class LoginServlet
@@ -37,6 +40,7 @@ import com.ibm.security.appscan.altoromutual.util.ServletUtil;
  */
 public class LoginServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(LoginServlet.class.getName());
 	
     /**
      * @see HttpServlet#HttpServlet()
@@ -96,7 +100,7 @@ public class LoginServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath()+"/bank/main.jsp");
 			}
 		catch (Exception ex){
-			ex.printStackTrace();
+			logger.log(Level.SEVERE, "An error occurred during login", ex);
 			response.sendError(500);
 		}
 			
