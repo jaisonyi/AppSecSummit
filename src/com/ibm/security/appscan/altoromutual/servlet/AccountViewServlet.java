@@ -25,6 +25,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ibm.security.appscan.altoromutual.model.Account;
+import com.ibm.security.appscan.altoromutual.model.User;
+
 
 /**
  * This servlet allows the users to view account and transaction information.
@@ -53,6 +56,26 @@ public class AccountViewServlet extends HttpServlet {
 				response.sendRedirect(request.getContextPath()+"/bank/main.jsp");
 				return;
 			}
+			User user = (User)request.getSession().getAttribute("user");
+			if (user == null){
+				response.sendRedirect(request.getContextPath()+"/bank/main.jsp");
+				return;
+			}
+			Account authorizedAccount = null;
+			Account[] accounts = user.getAccounts();
+			if (accounts != null){
+				for (Account account : accounts){
+					if (String.valueOf(account.getAccountId()).equals(accountName)){
+						authorizedAccount = account;
+						break;
+					}
+				}
+			}
+			if (authorizedAccount == null){
+				response.sendError(HttpServletResponse.SC_FORBIDDEN);
+				return;
+			}
+			request.setAttribute("balance", authorizedAccount.getBalance());
 //			response.sendRedirect("/bank/balance.jsp&acctId=" + accountName);
 			RequestDispatcher dispatcher = request.getRequestDispatcher("/bank/balance.jsp?acctId=" + accountName);
 			dispatcher.forward(request, response);
