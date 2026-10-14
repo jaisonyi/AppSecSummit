@@ -27,6 +27,12 @@
     var iPos = document.URL.indexOf("url=")+4;
   	var sDst = document.URL.substring(iPos,document.URL.length);
     // if redirection is in the application's domain, don't ask for authorization
+    var a = document.createElement('a');
+    a.href = sDst;
+    if(a.hostname !== document.location.hostname) {
+        // Abort redirection because the target URL is not on the allowed domain
+        return; // Developer can replace this with appropriate error handling
+    }
 	if ( sDst.indexOf("http") == 0 && sDst.indexOf(document.location.hostname) != -1 ) {
 		if (window.opener) {
       		window.opener.location.href = "http" + sDst.substring(4);
