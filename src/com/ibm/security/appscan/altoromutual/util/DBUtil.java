@@ -513,7 +513,7 @@ public class DBUtil {
 			statement.execute("UPDATE PEOPLE SET PASSWORD = '"+ password +"' WHERE USER_ID = '"+username+"'");
 			return null;
 		} catch (SQLException e){
-			return e.toString();
+			return e.toString();     
 			
 		}
 	}
