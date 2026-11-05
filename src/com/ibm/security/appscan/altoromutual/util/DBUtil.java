@@ -319,7 +319,7 @@ public class DBUtil {
 			java.sql.Timestamp date = new Timestamp(new java.util.Date().getTime());
 			
 			//in real life we would want to do these updates and transaction entry creation
-			//as one atomic operation
+			//as one atomic operation, Test note for pipeline.
 			
 			long userCC = user.getCreditCardNumber();
 			
