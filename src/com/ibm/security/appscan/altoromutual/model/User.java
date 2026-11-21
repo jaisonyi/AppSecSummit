@@ -17,6 +17,9 @@ IBM AltoroJ
  */
 package com.ibm.security.appscan.altoromutual.model;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 import java.sql.SQLException;
 import java.util.Date;
 
@@ -28,6 +31,7 @@ import com.ibm.security.appscan.altoromutual.util.DBUtil;
  *
  */
 public class User implements java.io.Serializable{
+	private static final Logger logger = Logger.getLogger(User.class.getName());
 
 	private static final long serialVersionUID = -4566649173574593144L;
 	
@@ -77,7 +81,7 @@ public class User implements java.io.Serializable{
 		try {
 			return DBUtil.getAccounts(username);
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Error retrieving accounts for user: " + username, e);
 			return null;
 		}
 	}
