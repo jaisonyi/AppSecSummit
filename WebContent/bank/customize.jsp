@@ -31,9 +31,7 @@ IBM AltoroJ
 		<%
 			String content = request.getParameter("content");
 			if (content != null && !content.equalsIgnoreCase("customize.jsp")){
-				if (content.startsWith("http://") || content.startsWith("https://")){
-					response.sendRedirect(content);
-				}
+				response.sendRedirect("customize.jsp");
 			}
 		%>
 		
