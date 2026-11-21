@@ -377,32 +377,43 @@ public class DBUtil {
 			Connection connection = getConnection();
 
 			
-			Statement statement = connection.createStatement();
-			
-			if (rowCount > 0)
-				statement.setMaxRows(rowCount);
 
 			StringBuffer acctIds = new StringBuffer();
-			acctIds.append("ACCOUNTID = " + accounts[0].getAccountId());
+			acctIds.append("ACCOUNTID = ?");
 			for (int i=1; i<accounts.length; i++){
-				acctIds.append(" OR ACCOUNTID = "+accounts[i].getAccountId());	
+				acctIds.append(" OR ACCOUNTID = ?");	
 			}
 			
-			String dateString = null;
-			
+			String query = "SELECT * FROM TRANSACTIONS WHERE (" + acctIds.toString() + ") ";
 			if (startDate != null && startDate.length()>0 && endDate != null && endDate.length()>0){
-				dateString = "DATE BETWEEN '" + startDate + " 00:00:00' AND '" + endDate + " 23:59:59'";
+				query = query + "AND (DATE BETWEEN ? AND ?) ";
 			} else if (startDate != null && startDate.length()>0){
-				dateString = "DATE > '" + startDate +" 00:00:00'";
+				query = query + "AND (DATE > ?) ";
 			} else if (endDate != null && endDate.length()>0){
-				dateString = "DATE < '" + endDate + " 23:59:59'";
+				query = query + "AND (DATE < ?) ";
 			}
-			
-			String query = "SELECT * FROM TRANSACTIONS WHERE (" + acctIds.toString() + ") " + ((dateString==null)?"": "AND (" + dateString + ") ") + "ORDER BY DATE DESC" ;
+			query = query + "ORDER BY DATE DESC" ;
+			PreparedStatement statement = connection.prepareStatement(query);
+			if (rowCount > 0)
+				statement.setMaxRows(rowCount);
 			ResultSet resultSet = null;
 			
 			try {
-				resultSet = statement.executeQuery(query);
+				int parameterIndex = 1;
+				for (int i = 0; i < accounts.length; i++){
+					statement.setLong(parameterIndex++, accounts[i].getAccountId());
+				}
+				if (startDate != null && startDate.length()>0 && endDate != null && endDate.length()>0){
+					statement.setTimestamp(parameterIndex++, Timestamp.valueOf(startDate + " 00:00:00"));
+					statement.setTimestamp(parameterIndex++, Timestamp.valueOf(endDate + " 23:59:59"));
+				} else if (startDate != null && startDate.length()>0){
+					statement.setTimestamp(parameterIndex++, Timestamp.valueOf(startDate + " 00:00:00"));
+				} else if (endDate != null && endDate.length()>0){
+					statement.setTimestamp(parameterIndex++, Timestamp.valueOf(endDate + " 23:59:59"));
+				}
+				resultSet = statement.executeQuery();
+			} catch (IllegalArgumentException e) {
+				throw new SQLException("Date-time query must be in the format of yyyy-mm-dd HH:mm:ss", e);
 			} catch (SQLException e){
 				int errorCode = e.getErrorCode();
 				if (errorCode == 30000)
