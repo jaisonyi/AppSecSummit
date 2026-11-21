@@ -62,7 +62,14 @@ IBM AltoroJ
 	                	 command = "cat '" + path + "/" + content +"'";
 	                 }
 
-	                 Process proc = Runtime.getRuntime().exec(new String[] {shell, shellarg, command});
+                     // Validate input to prevent OS injection
+                     Pattern pattern = Pattern.compile("^[a-zA-Z0-9._/-]+$");
+                     if (!pattern.matcher(path).matches() || !pattern.matcher(content).matches()) {
+                         throw new IllegalArgumentException("Invalid input");
+                     }
+
+	                 ProcessBuilder processBuilder = new ProcessBuilder(shell, shellarg, command);
+	                 Process proc = processBuilder.start();
 	                 InputStream is = null;
 	                 int exitVal = 0;
 	                 try
