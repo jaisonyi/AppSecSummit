@@ -522,8 +522,12 @@ public class DBUtil {
 	public static long storeFeedback(String name, String email, String subject, String comments) {
 		try{ 
 			Connection connection = getConnection();
-			Statement statement = connection.createStatement();
-			statement.execute("INSERT INTO FEEDBACK (NAME,EMAIL,SUBJECT,COMMENTS) VALUES ('"+name+"', '"+email+"', '"+subject+"', '"+comments+"')", Statement.RETURN_GENERATED_KEYS);
+			PreparedStatement statement = connection.prepareStatement("INSERT INTO FEEDBACK (NAME,EMAIL,SUBJECT,COMMENTS) VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement.setString(1, name);
+			statement.setString(2, email);
+			statement.setString(3, subject);
+			statement.setString(4, comments);
+			statement.executeUpdate();
 			ResultSet rs= statement.getGeneratedKeys();
 			long id = -1;
 			if (rs.next()){
