@@ -86,13 +86,13 @@ IBM AltoroJ
 		        <tr>
 		          <td>Ending balance as of <%= new SimpleDateFormat().format(new java.util.Date()) %>
 		          </td>
-		          <td align="right"><% out.println(balance); %></td>
+		          <td align="right">${balance}</td>
 		        </tr>
 			        <tr>
 		          <td>Available balance
 		          </td>
 		          <td align="right">
-		            <% out.println(balance); %></td>
+		            ${balance}</td>
 		        </tr>
 		      </table>
 		    </td>
