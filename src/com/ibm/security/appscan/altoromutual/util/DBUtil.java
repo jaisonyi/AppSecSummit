@@ -377,32 +377,47 @@ public class DBUtil {
 			Connection connection = getConnection();
 
 			
-			Statement statement = connection.createStatement();
-			
-			if (rowCount > 0)
-				statement.setMaxRows(rowCount);
-
 			StringBuffer acctIds = new StringBuffer();
-			acctIds.append("ACCOUNTID = " + accounts[0].getAccountId());
+			acctIds.append("ACCOUNTID = ?");
 			for (int i=1; i<accounts.length; i++){
-				acctIds.append(" OR ACCOUNTID = "+accounts[i].getAccountId());	
+				acctIds.append(" OR ACCOUNTID = ?");	
 			}
 			
 			String dateString = null;
 			
 			if (startDate != null && startDate.length()>0 && endDate != null && endDate.length()>0){
-				dateString = "DATE BETWEEN '" + startDate + " 00:00:00' AND '" + endDate + " 23:59:59'";
+				dateString = "DATE BETWEEN ? AND ?";
 			} else if (startDate != null && startDate.length()>0){
-				dateString = "DATE > '" + startDate +" 00:00:00'";
+				dateString = "DATE > ?";
 			} else if (endDate != null && endDate.length()>0){
-				dateString = "DATE < '" + endDate + " 23:59:59'";
+				dateString = "DATE < ?";
 			}
 			
 			String query = "SELECT * FROM TRANSACTIONS WHERE (" + acctIds.toString() + ") " + ((dateString==null)?"": "AND (" + dateString + ") ") + "ORDER BY DATE DESC" ;
+			PreparedStatement statement = connection.prepareStatement(query);
+			
+			if (rowCount > 0)
+				statement.setMaxRows(rowCount);
+			
+			int parameterIndex = 1;
+			statement.setLong(parameterIndex++, accounts[0].getAccountId());
+			for (int i=1; i<accounts.length; i++){
+				statement.setLong(parameterIndex++, accounts[i].getAccountId());	
+			}
+			
+			if (startDate != null && startDate.length()>0 && endDate != null && endDate.length()>0){
+				statement.setString(parameterIndex++, startDate + " 00:00:00");
+				statement.setString(parameterIndex++, endDate + " 23:59:59");
+			} else if (startDate != null && startDate.length()>0){
+				statement.setString(parameterIndex++, startDate +" 00:00:00");
+			} else if (endDate != null && endDate.length()>0){
+				statement.setString(parameterIndex++, endDate + " 23:59:59");
+			}
+			
 			ResultSet resultSet = null;
 			
 			try {
-				resultSet = statement.executeQuery(query);
+				resultSet = statement.executeQuery();
 			} catch (SQLException e){
 				int errorCode = e.getErrorCode();
 				if (errorCode == 30000)
