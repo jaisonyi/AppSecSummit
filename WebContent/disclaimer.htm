@@ -9,31 +9,56 @@
   </style>
   <script>
 
-    function go() {
-	    var iPos = document.URL.indexOf("url=")+4;
-    	var sDst = document.URL.substring(iPos,document.URL.length); 
-        if (window.opener) {
-      		window.opener.location.href = sDst;
-      		cl();
-        } else {
-        	window.location.href = sDst;
+    function getDestinationUrl() {
+      var currentUrl = new URL(window.location.href);
+      var candidate = currentUrl.searchParams.get("url");
+      if (!candidate) {
+        return null;
+      }
+
+      try {
+        return new URL(candidate, window.location.href);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function isApprovedRedirect(destUrl) {
+      return destUrl && destUrl.hostname == document.location.hostname &&
+        (destUrl.protocol == "http:" || destUrl.protocol == "https:");
+    }
+
+    function redirectToDestination(showWarning) {
+      if (!isApprovedRedirect(destinationUrl)) {
+        if (showWarning) {
+          alert("Invalid or unsafe destination.");
         }
+        return false;
+      }
+
+      if (window.opener) {
+        window.opener.location.href = destinationUrl.href;
+        cl();
+      } else {
+        window.location.href = destinationUrl.href;
+      }
+
+      return true;
+    }
+
+    function go() {
+      redirectToDestination(true);
     }
 
     function cl() {
       window.close();
     }
 
-    var iPos = document.URL.indexOf("url=")+4;
-  	var sDst = document.URL.substring(iPos,document.URL.length);
+    var destinationUrl = getDestinationUrl();
+  	var sDst = destinationUrl ? destinationUrl.href : "";
     // if redirection is in the application's domain, don't ask for authorization
-	if ( sDst.indexOf("http") == 0 && sDst.indexOf(document.location.hostname) != -1 ) {
-		if (window.opener) {
-      		window.opener.location.href = "http" + sDst.substring(4);
-      		cl();
-        } else {
-        	window.location.href = "http" + sDst.substring(4);
-        }
+	if ( isApprovedRedirect(destinationUrl) ) {
+		redirectToDestination(false);
 	}
 
 	</script>
