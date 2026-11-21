@@ -27,6 +27,14 @@
     var iPos = document.URL.indexOf("url=")+4;
   	var sDst = document.URL.substring(iPos,document.URL.length);
     // if redirection is in the application's domain, don't ask for authorization
+	try { 
+        var redirectUrl = new URL(sDst); 
+        if (redirectUrl.hostname !== document.location.hostname) { 
+            return; 
+        } 
+    } catch(e) { 
+        return; 
+    }
 	if ( sDst.indexOf("http") == 0 && sDst.indexOf(document.location.hostname) != -1 ) {
 		if (window.opener) {
       		window.opener.location.href = "http" + sDst.substring(4);
@@ -64,10 +72,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
